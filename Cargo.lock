@@ -321,6 +321,7 @@ dependencies = [
 name = "resource_manager"
 version = "0.1.0"
 dependencies = [
+ "byteorder",
  "image",
  "nom",
 ]

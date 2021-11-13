@@ -1,43 +1,33 @@
 mod parsers;
 mod readers;
+mod resources;
 
-use crate::parsers::{art::ItemArtData, color16::parse_color};
-use crate::readers::{art::ItemArt, tex_maps::TexMaps};
-use image::save_buffer_with_format;
-use nom::multi::many0;
+use crate::resources::{Art, IndexedMulReader, ProvideFromDisk, StandardMulLookup, TexMap};
 use std::io::Error;
 
 fn main() -> Result<(), Error> {
-    let mut item_art = ItemArt::new();
-    let entry = item_art.read_entry(0x4200)?;
+    let mut tex_map_reader = IndexedMulReader::<TexMap, StandardMulLookup>::new(
+        "/Users/tsul/Outlands/texidx.mul",
+        "/users/tsul/Outlands/texmaps.mul",
+    );
 
-    match entry {
-        ItemArtData::Raw(data) => match many0(parse_color)(&data).ok() {
-            None => println!("Nothing to see here"),
-            Some((_, colors)) => println!("raw, {:?}, {}", colors, colors.len()),
-        },
-        ItemArtData::Run(data) => println!("run, {:?}, {}", data, data.len()),
-    }
+    let tex_map = tex_map_reader.load_resource(0x137)?;
 
-    let mut tex_maps = TexMaps::new();
-    let entry = tex_maps.read_entry(0x137)?;
+    tex_map
+        .image
+        .save_with_format("output/tex.png", image::ImageFormat::Png)
+        .unwrap();
 
-    match many0(parse_color)(&entry).ok() {
-        None => println!("Nothing to see here"),
-        Some((_, colors)) => {
-            let buffer: Vec<u8> = colors.iter().flat_map(|c| c.to_le_bytes()).collect();
+    let mut art_reader = IndexedMulReader::<Art, StandardMulLookup>::new(
+        "/Users/tsul/Outlands/artidx.mul",
+        "/users/tsul/Outlands/art.mul",
+    );
 
-            save_buffer_with_format(
-                "test.png",
-                &buffer,
-                64,
-                64,
-                image::ColorType::Rgba8,
-                image::ImageFormat::Png,
-            )
-            .unwrap()
-        }
-    }
+    let art = art_reader.load_resource(0x137)?;
+
+    art.image
+        .save_with_format("output/art.png", image::ImageFormat::Png)
+        .unwrap();
 
     Ok(())
 }
