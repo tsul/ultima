@@ -15,7 +15,7 @@ fn main() -> Result<(), Error> {
 
     tex_map
         .image
-        .save_with_format("output/tex.png", image::ImageFormat::Png)
+        .save_with_format("output/tex-0x137.png", image::ImageFormat::Png)
         .unwrap();
 
     let mut art_reader = IndexedMulReader::<Art, StandardMulLookup>::new(
@@ -26,7 +26,16 @@ fn main() -> Result<(), Error> {
     let art = art_reader.load_resource(0x137)?;
 
     art.image
-        .save_with_format("output/art.png", image::ImageFormat::Png)
+        .save_with_format("output/art-0x137.png", image::ImageFormat::Png)
+        .unwrap();
+
+    let art = art_reader.load_resource(0x420 + 0x4000)?;
+
+    art.image
+        .save_with_format(
+            format!("output/art-{}.png", 0x420 + 0x4000),
+            image::ImageFormat::Png,
+        )
         .unwrap();
 
     Ok(())
