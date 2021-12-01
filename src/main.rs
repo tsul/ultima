@@ -1,5 +1,4 @@
 mod parsers;
-mod readers;
 mod resources;
 
 use crate::resources::{Art, IndexedMulReader, ProvideFromDisk, StandardMulLookup, TexMap};

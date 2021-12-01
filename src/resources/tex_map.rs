@@ -3,17 +3,16 @@ use crate::resources::MulLookup;
 use crate::resources::{Asset, ImageAsset};
 use image::RgbaImage;
 use nom::multi::many0;
+use std::io::{Error, ErrorKind};
 
 pub struct TexMap {
     pub image: RgbaImage,
 }
 
-impl Asset for TexMap {
-    fn load(data: Vec<u8>, lookup: impl MulLookup) -> Option<TexMap> {
-        let dim = if lookup.size() == 0x2000 { 64 } else { 128 };
-
+impl TexMap {
+    fn from_raw(data: Vec<u8>, size: u32) -> Result<TexMap, Error> {
         let colors = match many0(parse_color)(&data) {
-            Err(_) => return None,
+            Err(_) => return Err(Error::new(ErrorKind::InvalidData, "Unable to parse data")),
             Ok((_, colors)) => colors,
         };
 
@@ -22,10 +21,18 @@ impl Asset for TexMap {
             buffer.extend_from_slice(&val.to_le_bytes())
         }
 
-        match RgbaImage::from_vec(dim, dim, buffer) {
-            None => None,
-            Some(image) => Some(TexMap { image }),
+        match RgbaImage::from_vec(size, size, buffer) {
+            None => return Err(Error::new(ErrorKind::InvalidData, "Unable to create image")),
+            Some(image) => Ok(TexMap { image }),
         }
+    }
+}
+
+impl Asset for TexMap {
+    fn load(data: Vec<u8>, lookup: impl MulLookup) -> Option<TexMap> {
+        let size = if lookup.size() == 0x2000 { 64 } else { 128 };
+
+        TexMap::from_raw(data, size).ok()
     }
 }
 
