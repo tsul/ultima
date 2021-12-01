@@ -318,15 +318,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "resource_manager"
-version = "0.1.0"
-dependencies = [
- "byteorder",
- "image",
- "nom",
-]
-
-[[package]]
 name = "scoped_threadpool"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -347,6 +338,15 @@ dependencies = [
  "jpeg-decoder",
  "miniz_oxide 0.4.4",
  "weezl",
+]
+
+[[package]]
+name = "ultima"
+version = "0.1.0"
+dependencies = [
+ "byteorder",
+ "image",
+ "nom",
 ]
 
 [[package]]

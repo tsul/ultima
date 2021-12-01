@@ -13,14 +13,14 @@ impl Gump {
     fn from_run(id: u16, data: Vec<u8>, width: u16, height: u16) -> Result<Gump, Error> {
         let mut reader = Cursor::new(data);
 
-        let mut row_lookup: Vec<u32> = vec![0; height as usize];
+        let mut row_lookup = vec![0; height as usize];
 
         for i in 0..height {
             let value = reader.read_u32::<LittleEndian>()?;
             row_lookup.insert(i as usize, value);
         }
 
-        let buffer: Vec<u8> = vec![0; width as usize * height as usize * 4];
+        let buffer = vec![0; width as usize * height as usize * 4];
         let mut writer = Cursor::new(buffer);
 
         for y in 0..height {
@@ -28,7 +28,7 @@ impl Gump {
 
             let mut x = 0;
 
-            while x <= width {
+            while x < width {
                 let color16 = reader.read_u16::<LittleEndian>()?;
 
                 let (_, color32) = match parse_color(&color16.to_le_bytes()) {

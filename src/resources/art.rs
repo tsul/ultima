@@ -32,11 +32,11 @@ impl Art {
     fn from_raw(id: u16, data: Vec<u8>) -> Result<Art, Error> {
         let mut reader = Cursor::new(data);
 
-        let buffer: Vec<u8> = vec![0; 44 * 44 * 4];
+        let buffer = vec![0; 44 * 44 * 4];
         let mut writer = Cursor::new(buffer);
 
-        let mut x: i64 = 21;
-        let mut y: i64 = 0;
+        let mut x = 21;
+        let mut y = 0;
         let mut line_width = 2;
 
         while y < 22 {
@@ -105,18 +105,18 @@ impl Art {
             return Err(Error::new(ErrorKind::InvalidData, "Data is invalid"));
         }
 
-        let buffer: Vec<u8> = vec![0; width as usize * height as usize * 4];
+        let buffer = vec![0; width as usize * height as usize * 4];
         let mut writer = Cursor::new(buffer);
 
-        let mut l_start: Vec<u16> = vec![0; height as usize];
+        let mut l_start = vec![0; height as usize];
 
         for i in 0..height {
             let value = reader.read_u16::<LittleEndian>()?;
             l_start.insert(i as usize, value);
         }
 
-        let mut x: u16 = 0;
-        let mut y: u16 = 0;
+        let mut x = 0;
+        let mut y = 0;
 
         let d_start = reader.position();
 
