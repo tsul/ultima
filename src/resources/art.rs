@@ -164,15 +164,20 @@ impl Art {
 }
 
 impl LoadFromMul<StandardMulLookup> for Art {
-    fn load(id: u16, data: Vec<u8>, _: StandardMulLookup) -> Option<Art> {
+    fn load(id: u16, data: Vec<u8>, _: StandardMulLookup) -> Result<Art, Error> {
         let data = match parse_entry(&data) {
-            Err(_) => return None,
+            Err(_) => {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    format!("Unable to parse entry {}", id),
+                ))
+            }
             Ok((_, data)) => data,
         };
 
         match data {
-            ArtEncoding::Raw(d) => Art::from_raw(id, d).ok(),
-            ArtEncoding::Run(d) => Art::from_run(id, d).ok(),
+            ArtEncoding::Raw(d) => Art::from_raw(id, d),
+            ArtEncoding::Run(d) => Art::from_run(id, d),
         }
     }
 }

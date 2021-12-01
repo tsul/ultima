@@ -1,7 +1,15 @@
-use crate::resources::{LoadFromMul, MulLookup};
+use crate::resources::MulLookup;
 use std::fs::File;
 use std::io::{BufReader, Error, ErrorKind, Read, Seek, SeekFrom};
 use std::marker::PhantomData;
+
+pub trait LoadFromMul<L>
+where
+    Self: std::marker::Sized,
+    L: MulLookup,
+{
+    fn load(id: u16, data: Vec<u8>, lookup: L) -> Result<Self, Error>;
+}
 
 #[derive(Debug)]
 pub struct IndexedMulReader<T, L> {
@@ -29,13 +37,7 @@ impl<T: LoadFromMul<L>, L: MulLookup> IndexedMulReader<T, L> {
 
         let data = self.read_asset_data(id, lookup)?;
 
-        match T::load(id, data, lookup) {
-            None => Err(Error::new(
-                ErrorKind::InvalidData,
-                format!("Unable to parse data for id {}", id),
-            )),
-            Some(data) => Ok(data),
-        }
+        T::load(id, data, lookup)
     }
 
     fn read_lookup_data(&mut self, id: u16) -> Result<Vec<u8>, Error> {

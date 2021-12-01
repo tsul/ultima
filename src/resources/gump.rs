@@ -57,7 +57,7 @@ impl Gump {
 }
 
 impl LoadFromMul<GumpLookup> for Gump {
-    fn load(id: u16, data: Vec<u8>, lookup: GumpLookup) -> Option<Gump> {
-        Gump::from_run(id, data, lookup.width, lookup.height).ok()
+    fn load(id: u16, data: Vec<u8>, lookup: GumpLookup) -> Result<Gump, Error> {
+        Gump::from_run(id, data, lookup.width, lookup.height)
     }
 }

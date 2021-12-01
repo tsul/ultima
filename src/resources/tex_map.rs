@@ -29,9 +29,9 @@ impl TexMap {
 }
 
 impl LoadFromMul<StandardMulLookup> for TexMap {
-    fn load(id: u16, data: Vec<u8>, lookup: StandardMulLookup) -> Option<TexMap> {
+    fn load(id: u16, data: Vec<u8>, lookup: StandardMulLookup) -> Result<TexMap, Error> {
         let size = if lookup.size == 0x2000 { 64 } else { 128 };
 
-        TexMap::from_raw(id, data, size).ok()
+        TexMap::from_raw(id, data, size)
     }
 }
