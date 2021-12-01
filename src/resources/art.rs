@@ -1,5 +1,5 @@
 use crate::parsers::color16::parse_color;
-use crate::resources::{Asset, MulLookup};
+use crate::resources::{LoadFromMul, StandardMulLookup};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use image::RgbaImage;
 use nom::{number::complete::le_u32, IResult};
@@ -24,11 +24,12 @@ fn parse_entry(input: &[u8]) -> IResult<&[u8], ArtEncoding> {
 }
 
 pub struct Art {
+    pub id: u16,
     pub image: RgbaImage,
 }
 
 impl Art {
-    fn from_raw(data: Vec<u8>) -> Result<Art, Error> {
+    fn from_raw(id: u16, data: Vec<u8>) -> Result<Art, Error> {
         let mut reader = Cursor::new(data);
 
         let buffer: Vec<u8> = vec![0; 44 * 44 * 4];
@@ -83,11 +84,11 @@ impl Art {
 
         match RgbaImage::from_vec(44, 44, writer.into_inner()) {
             None => Err(Error::new(ErrorKind::InvalidData, "Unable to create image")),
-            Some(image) => Ok(Art { image }),
+            Some(image) => Ok(Art { id, image }),
         }
     }
 
-    fn from_run(data: Vec<u8>) -> Result<Art, Error> {
+    fn from_run(id: u16, data: Vec<u8>) -> Result<Art, Error> {
         let mut reader = Cursor::new(data);
 
         reader.read_u32::<LittleEndian>()?;
@@ -157,21 +158,21 @@ impl Art {
 
         match RgbaImage::from_vec(width as u32, height as u32, writer.into_inner()) {
             None => Err(Error::new(ErrorKind::InvalidData, "Unable to create image")),
-            Some(image) => Ok(Art { image }),
+            Some(image) => Ok(Art { id, image }),
         }
     }
 }
 
-impl Asset for Art {
-    fn load(data: Vec<u8>, _: impl MulLookup) -> Option<Art> {
+impl LoadFromMul<StandardMulLookup> for Art {
+    fn load(id: u16, data: Vec<u8>, _: StandardMulLookup) -> Option<Art> {
         let data = match parse_entry(&data) {
             Err(_) => return None,
             Ok((_, data)) => data,
         };
 
         match data {
-            ArtEncoding::Raw(d) => Art::from_raw(d).ok(),
-            ArtEncoding::Run(d) => Art::from_run(d).ok(),
+            ArtEncoding::Raw(d) => Art::from_raw(id, d).ok(),
+            ArtEncoding::Run(d) => Art::from_run(id, d).ok(),
         }
     }
 }

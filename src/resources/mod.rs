@@ -1,13 +1,14 @@
 mod art;
-mod asset;
+mod gump;
+mod hues;
 mod indexed_mul_reader;
+mod load_from_mul;
 mod lookup;
-mod provide_from_disk;
 mod tex_map;
 
 pub use art::Art;
-pub use asset::{Asset, ImageAsset};
+pub use gump::Gump;
 pub use indexed_mul_reader::IndexedMulReader;
-pub use lookup::{MulLookup, StandardMulLookup};
-pub use provide_from_disk::ProvideFromDisk;
+pub use load_from_mul::LoadFromMul;
+pub use lookup::{GumpLookup, MulLookup, StandardMulLookup};
 pub use tex_map::TexMap;

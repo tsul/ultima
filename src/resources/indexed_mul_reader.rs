@@ -1,4 +1,4 @@
-use crate::resources::{Asset, MulLookup, ProvideFromDisk};
+use crate::resources::{LoadFromMul, MulLookup};
 use std::fs::File;
 use std::io::{BufReader, Error, ErrorKind, Read, Seek, SeekFrom};
 use std::marker::PhantomData;
@@ -11,7 +11,7 @@ pub struct IndexedMulReader<T, L> {
     lookup_type: PhantomData<L>,
 }
 
-impl<T: Asset, L: MulLookup> IndexedMulReader<T, L> {
+impl<T: LoadFromMul<L>, L: MulLookup> IndexedMulReader<T, L> {
     pub fn new(idx_filename: &str, mul_filename: &str) -> IndexedMulReader<T, L> {
         let idx_handle = File::open(idx_filename).unwrap();
         let mul_handle = File::open(mul_filename).unwrap();
@@ -23,9 +23,21 @@ impl<T: Asset, L: MulLookup> IndexedMulReader<T, L> {
             lookup_type: PhantomData,
         }
     }
-}
 
-impl<T: Asset, L: MulLookup> ProvideFromDisk<T, L> for IndexedMulReader<T, L> {
+    pub fn load_asset(&mut self, id: u16) -> Result<T, Error> {
+        let lookup = self.load_lookup(id)?;
+
+        let data = self.read_asset_data(id, lookup)?;
+
+        match T::load(id, data, lookup) {
+            None => Err(Error::new(
+                ErrorKind::InvalidData,
+                format!("Unable to parse data for id {}", id),
+            )),
+            Some(data) => Ok(data),
+        }
+    }
+
     fn read_lookup_data(&mut self, id: u16) -> Result<Vec<u8>, Error> {
         let mut buffer = vec![0; std::mem::size_of::<L>()];
         let offset = id as usize * buffer.len();
@@ -36,7 +48,7 @@ impl<T: Asset, L: MulLookup> ProvideFromDisk<T, L> for IndexedMulReader<T, L> {
         Ok(buffer)
     }
 
-    fn read_resource_data(&mut self, id: u16, lookup: L) -> Result<Vec<u8>, Error> {
+    fn read_asset_data(&mut self, id: u16, lookup: L) -> Result<Vec<u8>, Error> {
         let offset = match lookup.offset() {
             offset if offset == 0xFFFFFFFF => {
                 return Err(Error::new(
@@ -53,5 +65,17 @@ impl<T: Asset, L: MulLookup> ProvideFromDisk<T, L> for IndexedMulReader<T, L> {
         self.mul.read_exact(&mut buffer)?;
 
         Ok(buffer)
+    }
+
+    fn load_lookup(&mut self, id: u16) -> Result<L, Error> {
+        let data = self.read_lookup_data(id)?;
+
+        match L::from_bytes(&data) {
+            Some(lookup) => Ok(lookup),
+            None => Err(Error::new(
+                ErrorKind::InvalidData,
+                format!("Unable to parse index entry {}", id),
+            )),
+        }
     }
 }

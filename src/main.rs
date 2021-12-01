@@ -1,16 +1,27 @@
 mod parsers;
 mod resources;
 
-use crate::resources::{Art, IndexedMulReader, ProvideFromDisk, StandardMulLookup, TexMap};
+use crate::resources::{Art, Gump, GumpLookup, IndexedMulReader, StandardMulLookup, TexMap};
 use std::io::Error;
 
 fn main() -> Result<(), Error> {
+    let mut gump_reader = IndexedMulReader::<Gump, GumpLookup>::new(
+        "/Users/tsul/Outlands/gumpidx.mul",
+        "/users/tsul/Outlands/gumpart.mul",
+    );
+
+    let gump = gump_reader.load_asset(0x137)?;
+
+    gump.image
+        .save_with_format("output/gump.png", image::ImageFormat::Png)
+        .unwrap();
+
     let mut tex_map_reader = IndexedMulReader::<TexMap, StandardMulLookup>::new(
         "/Users/tsul/Outlands/texidx.mul",
         "/users/tsul/Outlands/texmaps.mul",
     );
 
-    let tex_map = tex_map_reader.load_resource(0x137)?;
+    let tex_map = tex_map_reader.load_asset(0x137)?;
 
     tex_map
         .image
@@ -22,13 +33,13 @@ fn main() -> Result<(), Error> {
         "/users/tsul/Outlands/art.mul",
     );
 
-    let art = art_reader.load_resource(0x137)?;
+    let art = art_reader.load_asset(0x137)?;
 
     art.image
         .save_with_format("output/art-0x137.png", image::ImageFormat::Png)
         .unwrap();
 
-    let art = art_reader.load_resource(0x420 + 0x4000)?;
+    let art = art_reader.load_asset(0x420 + 0x4000)?;
 
     art.image
         .save_with_format(
